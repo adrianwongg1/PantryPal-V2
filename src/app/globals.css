@@ -1,0 +1,193 @@
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PantryPal Web — design tokens
+
+   Layer 1 (generic): ported verbatim from the "Modernist" Claude Design
+   system (claude.ai/design). Do NOT redefine these here — retune them in
+   Modernist and re-port, so the two stay in sync.
+
+   Layer 2 (domain): the meal-type scale. This is PantryPal-specific colour
+   inherited from the original JavaFX app. It sits ON TOP of Modernist
+   rather than replacing any of it.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@theme {
+  /* ── Modernist: core roles ─────────────────────────────────────────── */
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-ink: #201e1d;
+  --color-accent: #ec3013;
+  --color-accent-2: #e15b47;
+
+  /* ── Modernist: tonal ramps (OKLCH, shared lightness scale) ────────── */
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
+
+  --color-accent-100: #fff2ef;
+  --color-accent-200: #ffe0d9;
+  --color-accent-300: #ffc4b8;
+  --color-accent-400: #ff9783;
+  --color-accent-500: #ff563c;
+  --color-accent-600: #dd2b0f;
+  --color-accent-700: #ae1800;
+  --color-accent-800: #7c1405;
+  --color-accent-900: #4d170e;
+
+  /* ── Domain: meal types ────────────────────────────────────────────────
+     Rendered as Modernist-style tags (tinted bg + deep text), never as
+     solid fills — solid fills are reserved for the accent so a meal chip
+     can never be mistaken for a primary action.
+
+     Heritage note: Breakfast #39A7FF (2.58:1 on white) and Lunch #79AC78
+     (2.63:1) both failed WCAG AA, so the -700/-800 steps below are the
+     accessible descendants of those hues. Dinner moved off heritage red
+     #BE3144 to plum, because red collided with Modernist's accent.        */
+  --color-breakfast-100: #e8f1fb;
+  --color-breakfast-200: #c9defa;
+  --color-breakfast-700: #10527f;
+  --color-breakfast-800: #0d3f6b;
+
+  --color-lunch-100: #e9f3e8;
+  --color-lunch-200: #cbe3c9;
+  --color-lunch-700: #2f5c2b;
+  --color-lunch-800: #24471f;
+
+  --color-dinner-100: #f4ecf5;
+  --color-dinner-200: #e4d0e7;
+  --color-dinner-700: #5d2d66;
+  --color-dinner-800: #4a2350;
+
+  /* ── Typography ────────────────────────────────────────────────────────
+     Archivo is loaded via next/font in layout.tsx (self-hosted, no layout
+     shift, no external request — replaces Modernist's Google Fonts @import).
+     The legacy app's `monaco`/`arial` were machine-specific names that only
+     resolved on the developer's Mac; these are real cross-platform stacks. */
+  --font-heading: var(--font-archivo), system-ui, sans-serif;
+  --font-sans: var(--font-archivo), system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --font-weight-heading: 800;
+
+  /* ── Spacing / shape / elevation ───────────────────────────────────── */
+  --spacing: 4px;
+
+  /* Modernist is radius: 0 throughout. Pleasing accident of history: the
+     legacy JavaFX app *specified* rounded corners but every -fx-border-radius
+     was a no-op without -fx-background-radius, so it rendered square anyway. */
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+}
+
+/* Derived tokens that reference other tokens must live outside @theme. */
+:root {
+  --color-divider: color-mix(in srgb, var(--color-ink) 40%, transparent);
+  --color-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
+}
+
+/* ── Dark scheme ───────────────────────────────────────────────────────────
+   Modernist ships light-only (theme.json band: "light"). Dark is derived
+   here by walking its own neutral ramp, so the two schemes stay related.
+   Accent lightens one step to hold contrast on a dark ground.              */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1918;
+    --color-surface: #2d2b2b;
+    --color-ink: #f3f2f2;
+    --color-accent: #ff563c;
+    --color-divider: color-mix(in srgb, var(--color-ink) 30%, transparent);
+    --color-muted: color-mix(in srgb, var(--color-ink) 60%, transparent);
+
+    --color-breakfast-100: #12314a;
+    --color-breakfast-800: #bcd9f5;
+    --color-lunch-100: #1e3a1b;
+    --color-lunch-800: #c6e3c3;
+    --color-dinner-100: #3a2340;
+    --color-dinner-800: #e3c9e8;
+  }
+}
+
+/* Explicit override wins over the media query in both directions, so a
+   future in-app theme toggle works without fighting the OS preference. */
+:root[data-theme="light"] {
+  --color-bg: #f3f2f2;
+  --color-surface: #eae9e9;
+  --color-ink: #201e1d;
+  --color-accent: #ec3013;
+}
+
+:root[data-theme="dark"] {
+  --color-bg: #1a1918;
+  --color-surface: #2d2b2b;
+  --color-ink: #f3f2f2;
+  --color-accent: #ff563c;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Base — mirrors Modernist's type scale and rhythm
+   ══════════════════════════════════════════════════════════════════════ */
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: var(--font-weight-heading);
+  line-height: 1.12;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+h1 { font-size: 42px; }
+h2 { font-size: 32px; }
+h3 { font-size: 25px; }
+h4 { font-size: 20px; }
+h5 { font-size: 16px; }
+h6 {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

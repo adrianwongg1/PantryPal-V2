@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Cancel superseded runs on the same branch/PR instead of letting them queue.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Fake-but-well-formed values so env.ts/env.server.ts validate during
+  # typecheck/build without touching a real project. Nothing in this
+  # workflow talks to the live database or a real AI provider — that's
+  # what the mocked Vitest suite and the nightly smoke job are for.
+  NEXT_PUBLIC_SUPABASE_URL: "https://ci-placeholder.supabase.co"
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_ci_placeholder"
+  GROQ_API_KEY: "gsk_ci_placeholder"
+  ANTHROPIC_API_KEY: "sk-ant-ci_placeholder"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
+
+      - name: Unit tests
+        run: pnpm test --run
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start local Supabase stack
+        run: supabase start
+
+      - name: Apply migrations from scratch
+        # Rebuilds the DB from every file in supabase/migrations/ in order —
+        # catches a migration that only "works" because it was applied
+        # incrementally against hand-edited state, and catches drift between
+        # migrations and database.types.ts before it reaches production.
+        run: supabase db reset
+
+      - name: Database lint
+        run: supabase db lint
+
+      - name: Verify committed types match the schema
+        run: |
+          supabase gen types typescript --local > /tmp/database.types.ts
+          diff /tmp/database.types.ts src/lib/supabase/database.types.ts || {
+            echo "::error::src/lib/supabase/database.types.ts is stale — a migration changed the schema without regenerating types. Run: supabase gen types typescript --local > src/lib/supabase/database.types.ts"
+            exit 1
+          }
+
+      - name: Stop local Supabase stack
+        if: always()
+        run: supabase stop
