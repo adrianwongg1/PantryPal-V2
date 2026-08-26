@@ -98,15 +98,33 @@ jobs:
           }
 
       - name: Export local Supabase connection details for the e2e build
-        # `supabase status` prints JSON by default (this CLI version, at
-        # least — confirmed by running it directly, not assumed). Only
-        # URL/key are needed: everything e2e touches authenticates as a
-        # normal signed-up user through the publishable key, same as the
-        # real app, never as service_role.
+        # Was `STATUS=$(supabase status)` piped through `jq -r .API_URL` —
+        # that assumed `supabase status` prints JSON by default, true for
+        # the CLI version this step was first written against but NOT
+        # guaranteed across versions, and `supabase/setup-cli@v1`'s
+        # `version: latest` pulls whatever's current on every run. Confirmed
+        # directly this actually broke: a real CI run failed with
+        # `jq: parse error: Invalid numeric literal`, because a newer CLI's
+        # default `supabase status` output is plain text, not JSON — and
+        # because that failure happened inside a `$(...)` substitution
+        # feeding `echo`, `set -e` didn't catch it: this step "succeeded"
+        # while silently writing empty URL/key into $GITHUB_ENV, only
+        # surfacing later as an opaque env-validation failure in the next
+        # build step. `-o env --override-name` sidesteps the whole "what's
+        # the default format" question — it's a stable, documented flag
+        # (`supabase status --help` shows this exact use case) that emits
+        # the two variables under the exact names needed, no jq required.
+        # Filtered to just those two lines, not the full output, so this
+        # step never writes SERVICE_ROLE_KEY/SECRET_KEY into $GITHUB_ENV —
+        # every later step in this job would otherwise inherit them for no
+        # reason, a real credential this app's own env.server.ts deliberately
+        # never gives the running app access to (see its own comment).
         run: |
-          STATUS=$(supabase status)
-          echo "NEXT_PUBLIC_SUPABASE_URL=$(echo "$STATUS" | jq -r .API_URL)" >> "$GITHUB_ENV"
-          echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$(echo "$STATUS" | jq -r .PUBLISHABLE_KEY)" >> "$GITHUB_ENV"
+          supabase status -o env \
+            --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
+            --override-name auth.publishable_key=NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
+            | grep -E '^NEXT_PUBLIC_SUPABASE_(URL|PUBLISHABLE_KEY)=' \
+            | tr -d '"' >> "$GITHUB_ENV"
 
       - name: Build against the local Supabase stack (for e2e)
         # A second build, deliberately: the one above has the placeholder
