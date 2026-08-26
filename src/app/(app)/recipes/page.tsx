@@ -27,8 +27,8 @@ export default async function RecipesPage() {
         <div className="flex flex-1 flex-col items-center justify-center gap-2 border border-dashed border-[color:var(--color-divider)] py-24 text-center">
           <p className="text-base">No recipes yet.</p>
           <p className="text-sm text-[color:var(--color-muted)]">
-            Recipe generation arrives in a later phase — this is where your
-            saved recipes will show up.
+            Head to Generate and tell PantryPal what&rsquo;s in your kitchen —
+            recipes you save show up here.
           </p>
         </div>
       ) : (

@@ -34,6 +34,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      generation_events: {
+        Row: {
+          created_at: string
+          id: string
+          provider: string
+          succeeded: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          provider: string
+          succeeded: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          provider?: string
+          succeeded?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pantry_items: {
         Row: {
           category: string | null

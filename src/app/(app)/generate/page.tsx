@@ -1,11 +1,27 @@
-import { ComingSoon } from "@/components/layout/ComingSoon";
+import { requireUser } from "@/lib/supabase/server";
+import { hasAnthropicFallback } from "@/lib/ai/generate";
+import { GenerateForm } from "./GenerateForm";
 
-export default function GeneratePage() {
+export default async function GeneratePage() {
+  const { supabase, user } = await requireUser();
+
+  const { data: preferences, error } = await supabase
+    .from("user_preferences")
+    .select("default_servings, max_total_minutes, diets, allergies")
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
   return (
-    <ComingSoon
-      phase="Coming in Phase 5"
-      title="Tell PantryPal what's in your kitchen"
-      description="Type what you have, or generate from your pantry, and get a cookable recipe in seconds."
+    <GenerateForm
+      defaultServings={preferences.default_servings}
+      defaultMaxMinutes={preferences.max_total_minutes ?? 30}
+      diets={preferences.diets}
+      allergies={preferences.allergies}
+      hasAnthropicFallback={hasAnthropicFallback}
     />
   );
 }

@@ -143,7 +143,7 @@ test.describe("app shell", () => {
   test("every nav destination is reachable and none 404", async ({ page }) => {
     await signUpAndReachRecipes(page);
     for (const [label, heading] of [
-      ["Generate", "Tell PantryPal what's in your kitchen"],
+      ["Generate", /What.s in your kitchen tonight\?/],
       ["This week", "This week"],
       ["Pantry", "Your pantry"],
       ["Preferences", "How you eat"],
