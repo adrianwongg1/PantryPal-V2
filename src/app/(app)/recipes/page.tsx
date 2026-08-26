@@ -22,7 +22,7 @@ export default async function RecipesPage() {
         <button
           type="button"
           disabled
-          className="font-heading font-extrabold text-sm bg-accent text-bg px-4 py-2 disabled:opacity-45"
+          className="font-heading text-sm bg-accent text-ink px-4 py-2 disabled:opacity-45"
         >
           New recipe (coming soon)
         </button>

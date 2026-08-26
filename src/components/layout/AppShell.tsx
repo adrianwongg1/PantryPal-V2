@@ -12,7 +12,7 @@ export function AppShell({
       <header className="flex items-center justify-between border-b border-[color:var(--color-divider)] px-6 py-4">
         <Link
           href="/recipes"
-          className="text-[11px] font-heading font-extrabold uppercase tracking-[0.1em] text-accent"
+          className="text-[11px] font-heading uppercase tracking-[0.1em] text-accent-700"
         >
           PantryPal
         </Link>
@@ -22,7 +22,7 @@ export function AppShell({
           <form action="/auth/signout" method="post">
             <button
               type="submit"
-              className="text-[11px] font-heading font-extrabold uppercase tracking-wide text-accent"
+              className="text-[11px] font-heading uppercase tracking-wide text-accent-700"
             >
               Log out
             </button>

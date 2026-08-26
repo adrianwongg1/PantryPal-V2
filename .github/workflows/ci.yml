@@ -48,6 +48,24 @@ jobs:
       - name: Unit tests
         run: pnpm test --run
 
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        # Reuses the `pnpm build` output above (playwright.config.ts skips a
+        # second build when CI=true) and runs against port 3101, not 3000 —
+        # keeps this independent of whatever else might bind the default
+        # dev port on a shared runner.
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
       - uses: supabase/setup-cli@v1
         with:
           version: latest

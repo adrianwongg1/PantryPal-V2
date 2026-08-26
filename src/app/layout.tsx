@@ -1,14 +1,21 @@
 import type { Metadata } from "next";
-import { Archivo } from "next/font/google";
+import { Caprasimo, Figtree } from "next/font/google";
 import "./globals.css";
 
-// Self-hosted by Next at build time — matches Modernist's font choice
-// (Archivo) without the external Google Fonts @import Modernist's own
-// styles.css uses, so there's no extra network request or layout shift.
-const archivo = Archivo({
-  variable: "--font-archivo",
+// Self-hosted by Next at build time — matches Organic's own font choice
+// (Caprasimo display over Figtree body) without the external Google Fonts
+// @import Organic's own styles.css uses, so there's no extra network
+// request or layout shift. Caprasimo ships weight 400 only.
+const caprasimo = Caprasimo({
+  variable: "--font-caprasimo",
   subsets: ["latin"],
-  weight: ["400", "600", "800"],
+  weight: ["400"],
+});
+
+const figtree = Figtree({
+  variable: "--font-figtree",
+  subsets: ["latin"],
+  weight: "variable",
 });
 
 export const metadata: Metadata = {
@@ -22,7 +29,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${archivo.variable} h-full antialiased`}>
+    <html
+      lang="en"
+      className={`${caprasimo.variable} ${figtree.variable} h-full antialiased`}
+    >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

@@ -12,7 +12,7 @@ export default function LoginPage() {
   return (
     <div className="flex w-full max-w-sm flex-col gap-6">
       <div className="flex flex-col gap-1 text-center">
-        <span className="text-[11px] font-heading font-extrabold uppercase tracking-[0.1em] text-accent">
+        <span className="text-[11px] font-heading uppercase tracking-[0.1em] text-accent-700">
           PantryPal
         </span>
         <h1 className="text-2xl">Log in</h1>
@@ -41,7 +41,7 @@ export default function LoginPage() {
         </label>
 
         {state.error ? (
-          <p role="alert" className="text-sm text-accent">
+          <p role="alert" className="text-sm text-accent-700">
             {state.error}
           </p>
         ) : null}
@@ -49,7 +49,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={pending}
-          className="font-heading font-extrabold text-sm bg-accent text-bg px-5 py-2.5 disabled:opacity-45"
+          className="font-heading text-sm bg-accent text-ink px-5 py-2.5 disabled:opacity-45"
         >
           {pending ? "Logging in…" : "Log in"}
         </button>
@@ -57,7 +57,7 @@ export default function LoginPage() {
 
       <p className="text-center text-sm text-[color:var(--color-muted)]">
         New here?{" "}
-        <Link href="/signup" className="text-accent underline">
+        <Link href="/signup" className="text-accent-700 underline">
           Create an account
         </Link>
       </p>
