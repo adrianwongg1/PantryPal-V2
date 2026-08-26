@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 // Phase 0 placeholder. Proves the Modernist token port renders correctly
 // (bg/surface/ink/accent + the heritage meal-type scale) before any real
 // feature is built. Replaced by the real landing page in a later phase.
@@ -34,6 +36,15 @@ export default function Home() {
       >
         Generate a recipe (coming soon)
       </button>
+
+      <div className="flex items-center gap-4 text-sm">
+        <Link href="/login" className="text-accent underline">
+          Log in
+        </Link>
+        <Link href="/signup" className="text-accent underline">
+          Sign up
+        </Link>
+      </div>
     </div>
   );
 }
