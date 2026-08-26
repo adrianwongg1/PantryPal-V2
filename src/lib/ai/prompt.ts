@@ -1,4 +1,4 @@
-import type { DietTag, Difficulty, MealType } from "./schema";
+import type { DietTag, Difficulty, MealType, RecipeContent } from "./schema";
 import { DIET_TAG_LABELS } from "./diet-labels";
 
 export type GenerateRecipeInput = {
@@ -20,6 +20,28 @@ export type GenerateRecipeInput = {
 };
 
 const SPICE_LABELS = ["no heat", "warm", "hot", "punishing heat"];
+
+// Shared between the initial-generation prompt and the rewrite prompt
+// (buildRewritePrompt, below) — both need the model to emit the same
+// pantry_key/optional shape, so both build their system prompt from these
+// rather than drifting apart over time.
+const PANTRY_KEY_INSTRUCTION = [
+  "For every ingredient you list, also give a short canonical `pantry_key`",
+  "(e.g. \"chicken breast\", \"lime\", \"soy sauce\") separate from the",
+  "human-readable `name` — this is used to match ingredients against a",
+  "user's pantry later, so keep it a plain, singular, lowercase noun phrase",
+  "with no quantity, brand, or preparation detail in it.",
+].join("\n");
+
+const OPTIONAL_INSTRUCTION = [
+  "Mark an ingredient `optional: true` only if the recipe is genuinely",
+  "fine without it (a garnish, an optional heat boost) — not for anything",
+  "load-bearing to the dish. The `optional` field is how the app marks an",
+  "ingredient as optional in its own UI — never write \"(optional)\" or",
+  "similar into the ingredient's `name` itself, even when `optional` is",
+  "true; the name should read the same whether or not the ingredient",
+  "happens to be optional.",
+].join("\n");
 
 // Preferences are hard constraints, never suggestions — matches the design
 // canvas's own framing of Preferences ("These are never suggestions...
@@ -77,19 +99,9 @@ export function buildRecipePrompt(input: GenerateRecipeInput): {
     "Hard constraints — the recipe is invalid if it violates any of these:",
     ...constraintLines.map((line) => `- ${line}`),
     "",
-    "For every ingredient you list, also give a short canonical `pantry_key`",
-    "(e.g. \"chicken breast\", \"lime\", \"soy sauce\") separate from the",
-    "human-readable `name` — this is used to match ingredients against a",
-    "user's pantry later, so keep it a plain, singular, lowercase noun phrase",
-    "with no quantity, brand, or preparation detail in it.",
+    PANTRY_KEY_INSTRUCTION,
     "",
-    "Mark an ingredient `optional: true` only if the recipe is genuinely",
-    "fine without it (a garnish, an optional heat boost) — not for anything",
-    "load-bearing to the dish. The `optional` field is how the app marks an",
-    "ingredient as optional in its own UI — never write \"(optional)\" or",
-    "similar into the ingredient's `name` itself, even when `optional` is",
-    "true; the name should read the same whether or not the ingredient",
-    "happens to be optional.",
+    OPTIONAL_INSTRUCTION,
   ].join("\n");
 
   const promptLines = [
@@ -110,4 +122,39 @@ export function buildRecipePrompt(input: GenerateRecipeInput): {
   );
 
   return { system, prompt: promptLines.join("\n") };
+}
+
+// Backs the edit form's "Ask for a rewrite" chips (Phase 6) — a second AI
+// call against a recipe the user is already editing, not a fresh
+// generation. Deliberately asks for the FULL recipe back, not a diff:
+// recipeContentSchema is the same one-shot structured-output contract
+// either way, and having the model return a partial object would need a
+// merge step this app doesn't otherwise have anywhere.
+export function buildRewritePrompt(
+  current: RecipeContent,
+  instruction: string,
+): { system: string; prompt: string } {
+  const system = [
+    "You are PantryPal's recipe generator, now revising a recipe the user",
+    "already has saved, per their request below. Return the complete",
+    "recipe again in the same shape — every field, including ones you",
+    "don't change, not a diff.",
+    "",
+    "Keep each ingredient's `pantry_key` identical to the current recipe's",
+    "whenever that ingredient itself is unchanged — it drives pantry",
+    "matching, and changing it without reason breaks that match for",
+    "something the user never asked to change.",
+    "",
+    PANTRY_KEY_INSTRUCTION,
+    "",
+    OPTIONAL_INSTRUCTION,
+  ].join("\n");
+
+  const prompt = [
+    `Current recipe, as JSON: ${JSON.stringify(current)}`,
+    "",
+    `Requested change: ${instruction}`,
+  ].join("\n");
+
+  return { system, prompt };
 }
