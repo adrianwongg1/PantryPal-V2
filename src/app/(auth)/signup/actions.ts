@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { publicEnv } from "@/lib/env";
 
 export type AuthActionState = { error: string | null; message?: string };
 
@@ -29,7 +30,17 @@ export async function signup(
   }
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp(parsed.data);
+  const { data, error } = await supabase.auth.signUp({
+    ...parsed.data,
+    options: {
+      // Only reached when "Confirm email" is on (Supabase Cloud's default;
+      // off locally per supabase/config.toml) — routes the confirmation
+      // link's redirect into onboarding rather than auth/callback's own
+      // default of /recipes, so a cloud signup sees the same first-run
+      // flow as a local one where signUp returns a session immediately.
+      emailRedirectTo: `${publicEnv.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/onboarding`,
+    },
+  });
 
   if (error) {
     return { error: error.message };
@@ -46,5 +57,5 @@ export async function signup(
     };
   }
 
-  redirect("/recipes");
+  redirect("/onboarding");
 }

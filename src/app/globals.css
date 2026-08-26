@@ -26,6 +26,22 @@
   --color-accent: #c67139;
   --color-accent-2: #7a8a5e;
 
+  /* Label color for content sitting ON a filled accent surface. NOT a
+     synonym for --color-ink/--color-bg: --color-accent's own lightness is
+     "mid/light, needs a dark label" in BOTH schemes (light mode's base
+     accent and dark mode's lightened accent-400 alike), while --color-ink
+     flips from dark to light between those same two schemes. Reusing
+     --color-ink directly here (as an earlier version of this file did) is
+     the exact bug this pair of tokens exists to prevent: it read fine in
+     light mode and was a ~1.9:1 contrast failure in dark mode, since dark
+     mode's --color-ink is itself near-white. -contrast is the reverse
+     case, for the deliberately-darkened accent-700/800 hover/active fills
+     (fixed-dark in both schemes, so they always want the LIGHT label).
+     Verified per scheme in the override blocks below — see the plan doc's
+     contrast table for the numbers. */
+  --color-accent-ink: #201e1d;
+  --color-accent-contrast: #f5ead8;
+
   /* ── Organic: tonal ramps (OKLCH, shared lightness scale) ────────────
      Fixed across light/dark — only the semantic roles above (and the
      meal-type pairs below) get a dark override. Same convention the old
@@ -120,6 +136,8 @@
     --color-ink: #f9f4ed;
     --color-accent: #f6a06b;
     --color-accent-2: #aebf92;
+    --color-accent-ink: #1c1a15;
+    --color-accent-contrast: #f9f4ed;
     --color-divider: color-mix(in srgb, var(--color-ink) 22%, transparent);
     --color-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
 
@@ -144,6 +162,8 @@
   --color-ink: #201e1d;
   --color-accent: #c67139;
   --color-accent-2: #7a8a5e;
+  --color-accent-ink: #201e1d;
+  --color-accent-contrast: #f5ead8;
   --color-divider: color-mix(in srgb, var(--color-ink) 16%, transparent);
   --color-muted: color-mix(in srgb, var(--color-ink) 45%, transparent);
 
@@ -165,6 +185,8 @@
   --color-ink: #f9f4ed;
   --color-accent: #f6a06b;
   --color-accent-2: #aebf92;
+  --color-accent-ink: #1c1a15;
+  --color-accent-contrast: #f9f4ed;
   --color-divider: color-mix(in srgb, var(--color-ink) 22%, transparent);
   --color-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
 
@@ -185,83 +207,107 @@
    deliberately dark components living on an otherwise light-themed page —
    not a response to the OS/app theme. Wrap that screen's root in
    className="on-dark" to pin it to the dark palette regardless of
-   data-theme, the same way the design draws it in both modes.              */
-.on-dark {
-  --color-bg: #1c1a15;
-  --color-surface: #2e2b25;
-  --color-ink: #f9f4ed;
-  --color-accent: #f6a06b;
-  --color-accent-2: #aebf92;
-  --color-divider: color-mix(in srgb, #f9f4ed 22%, transparent);
-  --color-muted: color-mix(in srgb, #f9f4ed 55%, transparent);
-  background: var(--color-bg);
-  color: var(--color-ink);
+   data-theme, the same way the design draws it in both modes.
+
+   In @layer base for the same reason the Base section below is: its own
+   `background`/`color` are real (not just custom-property) declarations,
+   so left bare they'd beat any @layer components rule nested inside an
+   .on-dark subtree, the exact bug the Base section's own comment
+   describes — pre-empted here before cook mode (deferred) is built and
+   actually nests a .btn-primary inside one of these.                      */
+@layer base {
+  .on-dark {
+    --color-bg: #1c1a15;
+    --color-surface: #2e2b25;
+    --color-ink: #f9f4ed;
+    --color-accent: #f6a06b;
+    --color-accent-2: #aebf92;
+    --color-accent-ink: #1c1a15;
+    --color-accent-contrast: #f9f4ed;
+    --color-divider: color-mix(in srgb, #f9f4ed 22%, transparent);
+    --color-muted: color-mix(in srgb, #f9f4ed 55%, transparent);
+    background: var(--color-bg);
+    color: var(--color-ink);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
    Base — mirrors Organic's type scale and rhythm
+
+   In @layer base (Tailwind's own @layer theme, base, components, utilities
+   order — confirmed in node_modules/tailwindcss/index.css), not left bare.
+   Bare/unlayered CSS sits in an IMPLICIT layer after every named one, so it
+   beats @layer components rules regardless of specificity — a bare
+   `a { color: var(--color-accent) }` here silently overrode
+   `.btn-primary`'s color on any Link-rendered-as-<a> button (found via the
+   "Get started" CTA rendering with invisible text: same color as its own
+   background, because this rule was winning over .btn-primary's, not
+   because the accent-ink token itself was wrong). Layering this section
+   correctly is the actual fix — not something to route around per class.
    ══════════════════════════════════════════════════════════════════════ */
 
-body {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
-  font-size: 15px;
-  line-height: 1.55;
-}
+@layer base {
+  body {
+    background: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.55;
+  }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
-  font-family: var(--font-heading);
-  font-weight: var(--font-weight-heading);
-  line-height: 1.12;
-  letter-spacing: -0.015em;
-  text-wrap: balance;
-  margin: 0 0 calc(var(--spacing) * 2);
-}
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-heading);
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 calc(var(--spacing) * 2);
+  }
 
-h1 { font-size: 42px; }
-h2 { font-size: 32px; }
-h3 { font-size: 25px; }
-h4 { font-size: 20px; }
-h5 { font-size: 16px; }
-h6 {
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
+  h1 { font-size: 42px; }
+  h2 { font-size: 32px; }
+  h3 { font-size: 25px; }
+  h4 { font-size: 20px; }
+  h5 { font-size: 16px; }
+  h6 {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
-a {
-  color: var(--color-accent);
-  text-underline-offset: 3px;
-}
+  a {
+    color: var(--color-accent);
+    text-underline-offset: 3px;
+  }
 
-:focus {
-  outline: none;
-}
+  :focus {
+    outline: none;
+  }
 
-:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 
-::selection {
-  background: color-mix(in srgb, var(--color-accent) 30%, transparent);
-}
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  }
 
-/* Respect users who ask for less motion. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+  /* Respect users who ask for less motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -278,11 +324,19 @@ a {
       ("for paragraph-size text in the accent use a deep ramp step... rather
       than the accent itself") — the shipped component CSS just didn't
       follow its own guidance in a few places.
-   2. `.btn-primary` swaps label color instead of following the ramp
-      literally: ink text at rest (matches cook mode's own next-step button,
-      4.60:1), flipping to cream text from the hover state onward once the
-      background gets dark enough for ink to fail. Rest-state background is
-      unchanged; only the label color and the darkening curve change.
+   2. `.btn-primary` and checked `.seg-opt` swap label color instead of
+      following the ramp literally: a dark label at rest (matches cook
+      mode's own next-step button, 4.60:1), flipping to a light label from
+      the hover state onward once the background gets dark enough for a
+      dark label to fail. That label color comes from the dedicated
+      --color-accent-ink / --color-accent-contrast tokens above --color-bg
+      (theme roles), NOT from --color-ink/--color-bg directly — those two
+      SWAP which one is "dark" between light and dark mode, while
+      --color-accent stays light-enough-to-need-a-dark-label in both
+      schemes, so reusing --color-ink here reads fine in light mode and
+      fails at ~1.9:1 in dark mode (a real regression this file shipped
+      and then caught by looking at the button in an actual dark-mode
+      screenshot, not just re-deriving the same light-mode numbers).
    ══════════════════════════════════════════════════════════════════════ */
 
 @layer components {
@@ -317,15 +371,15 @@ a {
 
   .btn-primary {
     background: var(--color-accent);
-    color: var(--color-ink);
+    color: var(--color-accent-ink);
   }
   .btn-primary:hover {
     background: var(--color-accent-700);
-    color: var(--color-bg);
+    color: var(--color-accent-contrast);
   }
   .btn-primary:active {
     background: var(--color-accent-800);
-    color: var(--color-bg);
+    color: var(--color-accent-contrast);
   }
 
   .btn-secondary { border-color: var(--color-divider); }
@@ -401,7 +455,7 @@ a {
     cursor: pointer;
   }
   .seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
-  .seg-opt:has(input:checked) { background: var(--color-accent); color: var(--color-ink); }
+  .seg-opt:has(input:checked) { background: var(--color-accent); color: var(--color-accent-ink); }
   .seg-opt:not(:has(input:checked)):hover { background: color-mix(in srgb, var(--color-ink) 7%, transparent); }
   .seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 
@@ -451,6 +505,9 @@ a {
   .tag-accent-2 { background: var(--color-accent-2-100); color: var(--color-accent-2-800); }
   .tag-neutral { background: var(--color-neutral-100); color: var(--color-neutral-800); }
   .tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent-700); }
+  /* Only matters when a .tag wraps a real focusable control (ChipToggle,
+     TagInput's remove button) -- harmless no-op on every plain-text tag. */
+  .tag:has(:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
   /* — meal-type tags: domain layer, not part of Organic proper — */
   .tag-breakfast { background: var(--color-breakfast-100); color: var(--color-breakfast-800); }
@@ -502,9 +559,16 @@ a {
     padding: calc(var(--spacing) * 4);
     background: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
   }
+  /* display lives on .dialog[open], not .dialog itself: a bare .dialog
+     rule setting display:flex unconditionally would override the browser's
+     own `dialog:not([open]) { display: none }` UA default (an author rule
+     always beats a UA rule, regardless of specificity), making a *closed*
+     <dialog> render fully visible anyway — found by looking at an actual
+     browser render of a closed Sheet, not by the jsdom-based component
+     test, which can't see this: jsdom doesn't evaluate real CSS cascade
+     against the UA stylesheet's own dialog defaults at all. */
   .dialog {
     width: min(440px, 100%);
-    display: flex;
     flex-direction: column;
     gap: calc(var(--spacing) * 3);
     padding: calc(var(--spacing) * 4);
@@ -512,6 +576,7 @@ a {
     background: var(--color-surface);
     box-shadow: var(--shadow-lg);
   }
+  .dialog[open] { display: flex; }
   .dialog-title {
     font-family: var(--font-heading);
     font-weight: var(--font-weight-heading);

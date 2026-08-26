@@ -36,11 +36,11 @@ test.describe("design token port", () => {
     expect(errors, `console errors: ${errors.join("\n")}`).toHaveLength(0);
   });
 
-  test("primary button meets the AA contrast fix (ink label on accent, not cream)", async ({
+  test("primary CTA meets the AA contrast fix (ink label on accent, not cream)", async ({
     page,
   }) => {
     await page.goto("/");
-    const cta = page.getByRole("button", { name: /generate a recipe/i });
+    const cta = page.getByRole("link", { name: "Get started" });
     await expect(cta).toBeVisible();
     await expect(cta).toHaveCSS("color", INK);
     await expect(cta).toHaveCSS("background-color", "rgb(198, 113, 57)"); // --color-accent
@@ -64,6 +64,24 @@ test.describe("design token port", () => {
     await page.emulateMedia({ colorScheme: "dark" });
     await page.goto("/");
     await expect(page.locator("body")).toHaveCSS("background-color", DARK_BG);
+  });
+
+  test("primary CTA stays AA-readable in dark mode, not just light", async ({ page }) => {
+    // Regression test: --color-ink and --color-bg SWAP which one is "dark"
+    // between light and dark mode, but --color-accent doesn't swap the
+    // same way (it's light-enough-to-need-a-dark-label in both schemes).
+    // An earlier version of .btn-primary read `color: var(--color-ink)`
+    // directly, which passed this exact check in light mode and rendered
+    // at ~1.9:1 (near-invisible) in dark mode — caught by looking at an
+    // actual dark-mode screenshot, not by re-deriving the light-mode
+    // numbers. --color-accent-ink / --color-accent-contrast exist
+    // specifically so this can't happen again; this test pins that.
+    await page.emulateMedia({ colorScheme: "dark" });
+    await page.goto("/");
+    const cta = page.getByRole("link", { name: "Get started" });
+    await expect(cta).toBeVisible();
+    await expect(cta).toHaveCSS("background-color", "rgb(246, 160, 107)"); // dark --color-accent
+    await expect(cta).toHaveCSS("color", DARK_BG); // dark --color-accent-ink == dark --color-bg
   });
 
   test("login and signup render without console errors", async ({ page }) => {
