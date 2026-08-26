@@ -16,6 +16,7 @@ import {
 } from "@/lib/ai/generate";
 import { checkGenerationRateLimit, recordGenerationEvent } from "@/lib/ai/rate-limit";
 import { summarizePantryMatch, type PantryMatchSummary } from "@/lib/recipes/pantry-match";
+import { generateShareSlug } from "@/lib/share/slug";
 
 // hasAnthropicFallback is a plain value, not a Server Action — "use server"
 // files may only export async functions, so the page imports it directly
@@ -138,6 +139,19 @@ export async function saveRecipeAction(formData: FormData): Promise<void> {
     throw new Error("Generated recipe failed validation on save");
   }
 
+  // Phase 7's Settings page lets a user set a default visibility for new
+  // recipes — honored here, the one place a recipe is actually created
+  // from scratch (the edit form's own visibility control only ever
+  // changes an existing row, never sets the initial value). A slug is
+  // generated up front whenever that default isn't 'private', same as
+  // the edit action does the first time a recipe leaves private.
+  const { data: preferences } = await supabase
+    .from("user_preferences")
+    .select("default_visibility")
+    .eq("user_id", user.id)
+    .single();
+  const visibility = preferences?.default_visibility ?? "private";
+
   const { error } = await supabase.from("recipes").insert({
     user_id: user.id,
     title: parsed.data.title,
@@ -154,6 +168,8 @@ export async function saveRecipeAction(formData: FormData): Promise<void> {
     diet_tags: parsed.data.diet_tags,
     source: "generated",
     model: typeof model === "string" ? model : null,
+    visibility,
+    share_slug: visibility !== "private" ? generateShareSlug() : null,
   });
 
   if (error) {

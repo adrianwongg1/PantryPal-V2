@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Textarea } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Seg } from "@/components/ui/Seg";
+import { Stepper } from "@/components/ui/Stepper";
 import { Tag, MealTag } from "@/components/ui/Tag";
 import { Card } from "@/components/ui/Card";
 import { PhotoPlaceholder } from "@/components/ui/PhotoPlaceholder";
@@ -97,25 +98,7 @@ export function GenerateForm({
 
           <div>
             <div className="mb-1.5 text-xs text-[color:var(--color-muted)]">Serves</div>
-            <div className="flex items-center gap-3 rounded-full bg-bg px-2.5 py-1.5">
-              <button
-                type="button"
-                onClick={() => setServings((s) => Math.max(1, s - 1))}
-                className="grid h-6.5 w-6.5 place-items-center rounded-full bg-surface text-ink"
-                aria-label="Fewer servings"
-              >
-                −
-              </button>
-              <span className="min-w-4 text-center font-heading text-[17px]">{servings}</span>
-              <button
-                type="button"
-                onClick={() => setServings((s) => Math.min(12, s + 1))}
-                className="grid h-6.5 w-6.5 place-items-center rounded-full bg-surface text-ink"
-                aria-label="More servings"
-              >
-                +
-              </button>
-            </div>
+            <Stepper value={servings} onChange={setServings} min={1} max={12} label="servings" />
             <input type="hidden" name="servings" value={servings} />
           </div>
 
