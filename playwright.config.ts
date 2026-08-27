@@ -29,5 +29,10 @@ export default defineConfig({
     url: `http://127.0.0.1:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Only this Playwright-spawned server gets the flag — `pnpm dev` and a
+    // normal `pnpm start` never do, so using the actual app always calls
+    // the real Groq/Anthropic APIs. See lib/ai/generate.ts's
+    // MOCK_AI_RESPONSES comment for the full reasoning.
+    env: { MOCK_AI_RESPONSES: "1" },
   },
 });
