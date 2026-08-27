@@ -1,5 +1,6 @@
 import type { DietTag, Difficulty, MealType, RecipeContent } from "./schema";
 import { DIET_TAG_LABELS } from "./diet-labels";
+import { SPICE_LABELS } from "./recipe-labels";
 
 export type GenerateRecipeInput = {
   freeText: string;
@@ -18,8 +19,6 @@ export type GenerateRecipeInput = {
   /** Names of pantry_items the user currently has (status: "have"). */
   pantryItems: string[];
 };
-
-const SPICE_LABELS = ["no heat", "warm", "hot", "punishing heat"];
 
 // Shared between the initial-generation prompt and the rewrite prompt
 // (buildRewritePrompt, below) — both need the model to emit the same

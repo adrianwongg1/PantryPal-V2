@@ -90,6 +90,12 @@ function AccountSheetContent({ email }: { email: string }) {
         >
           <PreferencesIcon /> Preferences
         </Link>
+        <Link
+          href="/preferences/settings"
+          className="flex items-center gap-2.5 rounded-full px-3 py-2.5 text-sm no-underline text-ink"
+        >
+          <PreferencesIcon /> Settings
+        </Link>
       </nav>
       <form action="/auth/signout" method="post">
         <button type="submit" className="btn btn-ghost btn-block justify-start">
