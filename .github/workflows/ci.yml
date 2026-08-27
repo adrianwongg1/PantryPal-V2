@@ -36,6 +36,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate route types
+        # next-env.d.ts and .next/types/*.d.ts (the PageProps</LayoutProps>
+        # helper types) are both gitignored and normally only written as a
+        # side effect of `next dev`/`next build` — neither of which has run
+        # yet at this point in the job. Without this, `pnpm typecheck`
+        # fails on the very first PageProps/LayoutProps usage with "Cannot
+        # find name" on a completely fresh checkout. Confirmed directly:
+        # this exact step order, run against a fresh clone of this repo,
+        # reproduced the failure (on layout.tsx's LayoutProps<"/">, present
+        # since Phase 4) before this step was added — this wasn't caught
+        # earlier because CI had never actually run for any phase branch
+        # (see git history: the only 3 CI runs on this repo predate Phase 2
+        # entirely). `next typegen` is the official, build-free way to
+        # produce just these files.
+        run: pnpm exec next typegen
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -47,6 +63,24 @@ jobs:
 
       - name: Unit tests
         run: pnpm test --run
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        # Reuses the `pnpm build` output above (playwright.config.ts skips a
+        # second build when CI=true) and runs against port 3101, not 3000 —
+        # keeps this independent of whatever else might bind the default
+        # dev port on a shared runner.
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
 
       - uses: supabase/setup-cli@v1
         with:

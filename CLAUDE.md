@@ -19,6 +19,7 @@ pnpm test                   # vitest, watch mode
 pnpm test --run             # vitest, once (CI mode)
 pnpm test --run path/to/x.test.ts   # single file
 pnpm test --run -t "name"           # single test by name
+pnpm test:e2e                # playwright, against a real build on port 3101
 ```
 
 Database (needs the local stack via `supabase start` first):
@@ -30,7 +31,7 @@ supabase gen types typescript --local > src/lib/supabase/database.types.ts   # m
 supabase db lint
 ```
 
-CI (`.github/workflows/ci.yml`) runs, in order: typecheck → lint → build → `vitest --run` → `supabase start` → `supabase db reset` → `supabase db lint` → diff the freshly-generated types against the committed `database.types.ts` (fails the build if a migration wasn't followed by regenerating types). It injects fake-but-well-formed env values so typecheck/build succeed without real secrets; nothing in CI talks to a live Supabase project or a real AI provider.
+CI (`.github/workflows/ci.yml`) runs, in order: typecheck → lint → build → `vitest --run` → Playwright (`pnpm test:e2e`, reusing the build above, port 3101) → `supabase start` → `supabase db reset` → `supabase db lint` → diff the freshly-generated types against the committed `database.types.ts` (fails the build if a migration wasn't followed by regenerating types). It injects fake-but-well-formed env values so typecheck/build succeed without real secrets; nothing in CI talks to a live Supabase project or a real AI provider.
 
 ## Architecture
 
@@ -62,10 +63,16 @@ Numbered by timestamp, applied in order via `supabase db reset`. Four tables: `p
 
 `src/app/globals.css` defines Tailwind v4 tokens in two layers:
 
-1. **Generic** — ported verbatim from the "Modernist" Claude Design system. Retune in Modernist itself and re-port; don't edit these values here.
-2. **Domain** — the meal-type color scale (breakfast/lunch/dinner), inherited from the legacy JavaFX app but recomputed, since two of the original heritage colors failed WCAG AA contrast.
+1. **Generic** — ported from the "Organic" Claude Design system (warm cream/sand ground, terracotta accent, sage second accent, Caprasimo display over Figtree body, generous radii). Retune in Organic and re-port; don't edit these values here. Role names stay the repo's own (`--color-ink`, `--color-bg`, ...) rather than Organic's `--color-text`, so `text-ink` etc. keep working as Tailwind utilities — the values underneath are Organic's, 1:1.
+2. **Domain** — the five-category meal-type color scale (breakfast/lunch/dinner/snack/dessert), lifted directly from the design canvas's own tag usage.
 
-Both light and dark values are defined for every token. Dark applies via `prefers-color-scheme` by default; `:root[data-theme="light"|"dark"]` overrides win in both directions, for a future in-app toggle to layer on top of the OS preference without fighting it.
+Both light and dark values are defined for every token. Dark applies via `prefers-color-scheme` by default; `:root[data-theme="light"|"dark"]` overrides win in both directions, for a future in-app toggle to layer on top of the OS preference without fighting it. A `.on-dark` class exists separately for screens that are deliberately dark regardless of the app's theme (e.g. cook mode) — wrap that screen's root in it rather than fighting the light/dark override chain.
+
+Two deliberate accessibility deviations from the design system as drawn (both measured, not eyeballed — see `docs/progress/001_design_system_port.md`): text set in the bare accent color uses `--color-accent-700` instead (Organic's own stated rule for text-sized accent usage, just not followed everywhere in its own shipped CSS), and `.btn-primary`'s label is ink at rest, flipping to cream once the hover/active background darkens past the point where ink stops passing AA.
+
+### End-to-end tests
+
+`e2e/*.spec.ts` (Playwright, config at `playwright.config.ts`) run against a real `next build && next start`, on port **3101** — deliberately not 3000, since `reuseExistingServer` will happily attach to *any* server already listening on the configured port, including an unrelated project's dev server, and every assertion then fails against the wrong site with no obvious cause. `pnpm test:e2e` builds locally; CI (`PORT=3101 pnpm start` only) reuses the build the workflow already did.
 
 ### Path alias
 

@@ -1,11 +1,14 @@
-// Phase 0 placeholder. Proves the Modernist token port renders correctly
-// (bg/surface/ink/accent + the heritage meal-type scale) before any real
-// feature is built. Replaced by the real landing page in a later phase.
+import Link from "next/link";
+
+// Phase 0/1 placeholder, kept through the Organic token port (Phase 2) so it
+// still proves the port renders correctly — real bg/surface/ink/accent, the
+// five-category meal-type scale, and the ported .btn/.tag component classes.
+// Replaced by the real landing page in Phase 4.
 export default function Home() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-10 bg-bg px-6 py-24 text-ink">
       <div className="flex max-w-xl flex-col items-center gap-4 text-center">
-        <span className="text-[11px] font-heading font-extrabold uppercase tracking-[0.1em] text-accent">
+        <span className="text-[11px] font-heading uppercase tracking-[0.1em] text-accent-700">
           PantryPal
         </span>
         <h1 className="text-4xl">What&rsquo;s in your kitchen?</h1>
@@ -16,24 +19,25 @@ export default function Home() {
       </div>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
-        <span className="inline-flex items-center px-2.5 py-1 text-[11px] tracking-wide bg-breakfast-100 text-breakfast-800">
-          Breakfast
-        </span>
-        <span className="inline-flex items-center px-2.5 py-1 text-[11px] tracking-wide bg-lunch-100 text-lunch-800">
-          Lunch
-        </span>
-        <span className="inline-flex items-center px-2.5 py-1 text-[11px] tracking-wide bg-dinner-100 text-dinner-800">
-          Dinner
-        </span>
+        <span className="tag tag-breakfast">Breakfast</span>
+        <span className="tag tag-lunch">Lunch</span>
+        <span className="tag tag-dinner">Dinner</span>
+        <span className="tag tag-snack">Snack</span>
+        <span className="tag tag-dessert">Dessert</span>
       </div>
 
-      <button
-        type="button"
-        disabled
-        className="font-heading font-extrabold text-sm bg-accent text-bg px-5 py-2.5 disabled:opacity-45"
-      >
+      <button type="button" disabled className="btn btn-primary">
         Generate a recipe (coming soon)
       </button>
+
+      <div className="flex items-center gap-4 text-sm">
+        <Link href="/login" className="text-accent-700 underline">
+          Log in
+        </Link>
+        <Link href="/signup" className="text-accent-700 underline">
+          Sign up
+        </Link>
+      </div>
     </div>
   );
 }

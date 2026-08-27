@@ -3,140 +3,203 @@
 /* ══════════════════════════════════════════════════════════════════════════
    PantryPal Web — design tokens
 
-   Layer 1 (generic): ported verbatim from the "Modernist" Claude Design
-   system (claude.ai/design). Do NOT redefine these here — retune them in
-   Modernist and re-port, so the two stay in sync.
+   Layer 1 (generic): ported from the "Organic" Claude Design system
+   (claude.ai/design) — warm cream/sand ground, terracotta accent, sage
+   second accent, Caprasimo display over Figtree body, generous radii.
+   Retune in Organic and re-port; don't edit these values here.
 
-   Layer 2 (domain): the meal-type scale. This is PantryPal-specific colour
-   inherited from the original JavaFX app. It sits ON TOP of Modernist
-   rather than replacing any of it.
+   Naming: this file keeps the repo's existing role names (--color-ink,
+   --color-bg, --color-surface, --color-accent, --color-accent-2) rather than
+   Organic's own --color-text, so `text-ink` etc. keep working as Tailwind
+   utilities. The values underneath are Organic's, 1:1.
+
+   Layer 2 (domain): the meal-type color scale (breakfast/lunch/dinner/
+   snack/dessert), lifted directly from the design canvas's own tag usage.
+   Supersedes the old three-category Modernist-era scale.
    ══════════════════════════════════════════════════════════════════════ */
 
 @theme {
-  /* ── Modernist: core roles ─────────────────────────────────────────── */
-  --color-bg: #f3f2f2;
-  --color-surface: #eae9e9;
+  /* ── Organic: core roles ───────────────────────────────────────────── */
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
   --color-ink: #201e1d;
-  --color-accent: #ec3013;
-  --color-accent-2: #e15b47;
+  --color-accent: #c67139;
+  --color-accent-2: #7a8a5e;
 
-  /* ── Modernist: tonal ramps (OKLCH, shared lightness scale) ────────── */
-  --color-neutral-100: #f8f4f4;
-  --color-neutral-200: #eae7e7;
-  --color-neutral-300: #d7d3d3;
-  --color-neutral-400: #bab6b6;
-  --color-neutral-500: #9b9797;
-  --color-neutral-600: #7d7979;
-  --color-neutral-700: #605d5d;
-  --color-neutral-800: #444141;
-  --color-neutral-900: #2d2b2b;
+  /* ── Organic: tonal ramps (OKLCH, shared lightness scale) ────────────
+     Fixed across light/dark — only the semantic roles above (and the
+     meal-type pairs below) get a dark override. Same convention the old
+     Modernist port used: numbered ramp steps don't flip with the scheme. */
+  --color-neutral-100: #f9f4ed;
+  --color-neutral-200: #eee7db;
+  --color-neutral-300: #dcd3c4;
+  --color-neutral-400: #c0b6a5;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #82796a;
+  --color-neutral-700: #645c50;
+  --color-neutral-800: #474238;
+  --color-neutral-900: #2e2b25;
 
-  --color-accent-100: #fff2ef;
-  --color-accent-200: #ffe0d9;
-  --color-accent-300: #ffc4b8;
-  --color-accent-400: #ff9783;
-  --color-accent-500: #ff563c;
-  --color-accent-600: #dd2b0f;
-  --color-accent-700: #ae1800;
-  --color-accent-800: #7c1405;
-  --color-accent-900: #4d170e;
+  --color-accent-100: #fff2eb;
+  --color-accent-200: #ffe1d0;
+  --color-accent-300: #ffc6a5;
+  --color-accent-400: #f6a06b;
+  --color-accent-500: #d67f48;
+  --color-accent-600: #b2622d;
+  --color-accent-700: #8c491a;
+  --color-accent-800: #643312;
+  --color-accent-900: #402310;
+
+  --color-accent-2-100: #f0fae1;
+  --color-accent-2-200: #e1eecc;
+  --color-accent-2-300: #ccdbb2;
+  --color-accent-2-400: #aebf92;
+  --color-accent-2-500: #8fa073;
+  --color-accent-2-600: #728157;
+  --color-accent-2-700: #56633f;
+  --color-accent-2-800: #3d472b;
+  --color-accent-2-900: #272e1b;
 
   /* ── Domain: meal types ────────────────────────────────────────────────
-     Rendered as Modernist-style tags (tinted bg + deep text), never as
-     solid fills — solid fills are reserved for the accent so a meal chip
-     can never be mistaken for a primary action.
-
-     Heritage note: Breakfast #39A7FF (2.58:1 on white) and Lunch #79AC78
-     (2.63:1) both failed WCAG AA, so the -700/-800 steps below are the
-     accessible descendants of those hues. Dinner moved off heritage red
-     #BE3144 to plum, because red collided with Modernist's accent.        */
-  --color-breakfast-100: #e8f1fb;
-  --color-breakfast-200: #c9defa;
-  --color-breakfast-700: #10527f;
-  --color-breakfast-800: #0d3f6b;
-
-  --color-lunch-100: #e9f3e8;
-  --color-lunch-200: #cbe3c9;
-  --color-lunch-700: #2f5c2b;
-  --color-lunch-800: #24471f;
-
-  --color-dinner-100: #f4ecf5;
-  --color-dinner-200: #e4d0e7;
-  --color-dinner-700: #5d2d66;
-  --color-dinner-800: #4a2350;
+     Lifted from the design canvas's own inline tag usage (light -100/-800
+     pairs). Dark pairs are computed, not eyeballed: same hue, bg pulled to
+     ~20% lightness with saturation boosted, text pushed to ~86% lightness —
+     every pair verified >= 6.2:1 (see the plan doc for the numbers).       */
+  --color-breakfast-100: #f7e6c0;
+  --color-breakfast-800: #6f4c12;
+  --color-lunch-100: #e1eecc;
+  --color-lunch-800: #3d472b;
+  --color-dinner-100: #e8dced;
+  --color-dinner-800: #4a2f57;
+  --color-snack-100: #ffe1d0;
+  --color-snack-800: #643312;
+  --color-dessert-100: #f6dcd8;
+  --color-dessert-800: #7a3527;
 
   /* ── Typography ────────────────────────────────────────────────────────
-     Archivo is loaded via next/font in layout.tsx (self-hosted, no layout
-     shift, no external request — replaces Modernist's Google Fonts @import).
-     The legacy app's `monaco`/`arial` were machine-specific names that only
-     resolved on the developer's Mac; these are real cross-platform stacks. */
-  --font-heading: var(--font-archivo), system-ui, sans-serif;
-  --font-sans: var(--font-archivo), system-ui, sans-serif;
+     Caprasimo (weight 400 only — that's all it ships) and Figtree, both
+     self-hosted via next/font/google in layout.tsx: no external request,
+     no layout shift, unlike Organic's own googleapis.com @import.          */
+  --font-heading: var(--font-caprasimo), Georgia, serif;
+  --font-sans: var(--font-figtree), system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
-  --font-weight-heading: 800;
+  --font-weight-heading: 400;
 
-  /* ── Spacing / shape / elevation ───────────────────────────────────── */
-  --spacing: 4px;
+  /* ── Spacing / shape / elevation ───────────────────────────────────────
+     4.4px is Organic's 1.10x density baked into a single base unit — every
+     Tailwind spacing utility (p-4, gap-2, ...) inherits it automatically. */
+  --spacing: 4.4px;
 
-  /* Modernist is radius: 0 throughout. Pleasing accident of history: the
-     legacy JavaFX app *specified* rounded corners but every -fx-border-radius
-     was a no-op without -fx-background-radius, so it rendered square anyway. */
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 28px;
+  /* Pills (buttons, inputs, tags) use Tailwind's built-in rounded-full. */
 
-  --shadow-sm: 0 1px 2px color-mix(in srgb, #2d2b2b 14%, transparent);
-  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
-  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+  --shadow-sm: 0 1px 2px color-mix(in srgb, #2e2b25 14%, transparent);
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2e2b25 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2e2b25 22%, transparent);
 }
 
 /* Derived tokens that reference other tokens must live outside @theme. */
 :root {
-  --color-divider: color-mix(in srgb, var(--color-ink) 40%, transparent);
-  --color-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
+  --color-divider: color-mix(in srgb, var(--color-ink) 16%, transparent);
+  --color-muted: color-mix(in srgb, var(--color-ink) 45%, transparent);
 }
 
 /* ── Dark scheme ───────────────────────────────────────────────────────────
-   Modernist ships light-only (theme.json band: "light"). Dark is derived
-   here by walking its own neutral ramp, so the two schemes stay related.
-   Accent lightens one step to hold contrast on a dark ground.              */
+   Organic ships light-only. Bg/surface/ink are derived by walking its own
+   neutral ramp (same method the old Modernist port used); accent and
+   accent-2 are NOT invented — they're lifted directly from the canvas's own
+   dark-ground usage in cook mode (7b) and the "can't decide" screen (2d),
+   which both already land on accent-400 / accent-2-400 for accent-on-dark. */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-bg: #1a1918;
-    --color-surface: #2d2b2b;
-    --color-ink: #f3f2f2;
-    --color-accent: #ff563c;
-    --color-divider: color-mix(in srgb, var(--color-ink) 30%, transparent);
-    --color-muted: color-mix(in srgb, var(--color-ink) 60%, transparent);
+    --color-bg: #1c1a15;
+    --color-surface: #2e2b25;
+    --color-ink: #f9f4ed;
+    --color-accent: #f6a06b;
+    --color-accent-2: #aebf92;
+    --color-divider: color-mix(in srgb, var(--color-ink) 22%, transparent);
+    --color-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
 
-    --color-breakfast-100: #12314a;
-    --color-breakfast-800: #bcd9f5;
-    --color-lunch-100: #1e3a1b;
-    --color-lunch-800: #c6e3c3;
-    --color-dinner-100: #3a2340;
-    --color-dinner-800: #e3c9e8;
+    --color-breakfast-100: #664600;
+    --color-breakfast-800: #f2e1c4;
+    --color-lunch-100: #3b570f;
+    --color-lunch-800: #dee3d3;
+    --color-dinner-100: #3d1a4c;
+    --color-dinner-800: #dfd2e5;
+    --color-snack-100: #662500;
+    --color-snack-800: #f2d7c5;
+    --color-dessert-100: #5f1307;
+    --color-dessert-800: #ecd0cb;
   }
 }
 
 /* Explicit override wins over the media query in both directions, so a
    future in-app theme toggle works without fighting the OS preference. */
 :root[data-theme="light"] {
-  --color-bg: #f3f2f2;
-  --color-surface: #eae9e9;
+  --color-bg: #f5ead8;
+  --color-surface: #ebddc5;
   --color-ink: #201e1d;
-  --color-accent: #ec3013;
+  --color-accent: #c67139;
+  --color-accent-2: #7a8a5e;
+  --color-divider: color-mix(in srgb, var(--color-ink) 16%, transparent);
+  --color-muted: color-mix(in srgb, var(--color-ink) 45%, transparent);
+
+  --color-breakfast-100: #f7e6c0;
+  --color-breakfast-800: #6f4c12;
+  --color-lunch-100: #e1eecc;
+  --color-lunch-800: #3d472b;
+  --color-dinner-100: #e8dced;
+  --color-dinner-800: #4a2f57;
+  --color-snack-100: #ffe1d0;
+  --color-snack-800: #643312;
+  --color-dessert-100: #f6dcd8;
+  --color-dessert-800: #7a3527;
 }
 
 :root[data-theme="dark"] {
-  --color-bg: #1a1918;
-  --color-surface: #2d2b2b;
-  --color-ink: #f3f2f2;
-  --color-accent: #ff563c;
+  --color-bg: #1c1a15;
+  --color-surface: #2e2b25;
+  --color-ink: #f9f4ed;
+  --color-accent: #f6a06b;
+  --color-accent-2: #aebf92;
+  --color-divider: color-mix(in srgb, var(--color-ink) 22%, transparent);
+  --color-muted: color-mix(in srgb, var(--color-ink) 55%, transparent);
+
+  --color-breakfast-100: #664600;
+  --color-breakfast-800: #f2e1c4;
+  --color-lunch-100: #3b570f;
+  --color-lunch-800: #dee3d3;
+  --color-dinner-100: #3d1a4c;
+  --color-dinner-800: #dfd2e5;
+  --color-snack-100: #662500;
+  --color-snack-800: #f2d7c5;
+  --color-dessert-100: #5f1307;
+  --color-dessert-800: #ecd0cb;
+}
+
+/* ── .on-dark ──────────────────────────────────────────────────────────────
+   Two screens in the design (cook mode, the "can't decide" dial screen) are
+   deliberately dark components living on an otherwise light-themed page —
+   not a response to the OS/app theme. Wrap that screen's root in
+   className="on-dark" to pin it to the dark palette regardless of
+   data-theme, the same way the design draws it in both modes.              */
+.on-dark {
+  --color-bg: #1c1a15;
+  --color-surface: #2e2b25;
+  --color-ink: #f9f4ed;
+  --color-accent: #f6a06b;
+  --color-accent-2: #aebf92;
+  --color-divider: color-mix(in srgb, #f9f4ed 22%, transparent);
+  --color-muted: color-mix(in srgb, #f9f4ed 55%, transparent);
+  background: var(--color-bg);
+  color: var(--color-ink);
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Base — mirrors Modernist's type scale and rhythm
+   Base — mirrors Organic's type scale and rhythm
    ══════════════════════════════════════════════════════════════════════ */
 
 body {
@@ -158,6 +221,7 @@ h6 {
   line-height: 1.12;
   letter-spacing: -0.015em;
   text-wrap: balance;
+  margin: 0 0 calc(var(--spacing) * 2);
 }
 
 h1 { font-size: 42px; }
@@ -169,6 +233,15 @@ h6 {
   font-size: 13px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+a {
+  color: var(--color-accent);
+  text-underline-offset: 3px;
+}
+
+:focus {
+  outline: none;
 }
 
 :focus-visible {
@@ -190,4 +263,268 @@ h6 {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Components — ported from Organic's styles.css, on the tokens above.
+
+   Accessibility deviations from the design system as drawn, both required
+   because the artboards' own color choices fail WCAG AA at the sizes they're
+   used (measured, not eyeballed — see the plan doc's contrast table):
+
+   1. Text set in the bare accent color (`.btn-ghost`, `.tag-outline`,
+      `.card-kicker`, `nav a:hover`) uses --color-accent-700 instead of
+      --color-accent. This isn't invented: it's Organic's OWN stated rule
+      ("for paragraph-size text in the accent use a deep ramp step... rather
+      than the accent itself") — the shipped component CSS just didn't
+      follow its own guidance in a few places.
+   2. `.btn-primary` swaps label color instead of following the ramp
+      literally: ink text at rest (matches cook mode's own next-step button,
+      4.60:1), flipping to cream text from the hover state onward once the
+      background gets dark enough for ink to fail. Rest-state background is
+      unchanged; only the label color and the darkening curve change.
+   ══════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* — rules — */
+  .hr {
+    height: 1px;
+    border: 0;
+    margin: calc(var(--spacing) * 4) 0;
+    background: var(--color-divider);
+  }
+
+  /* — buttons — */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    text-decoration: none;
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-heading);
+    font-size: 14px;
+    line-height: 1.2;
+    color: var(--color-ink);
+    background: transparent;
+    border: 1px solid transparent;
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 3.6);
+    border-radius: var(--radius-md);
+  }
+  .btn svg { display: block; }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--color-accent);
+    color: var(--color-ink);
+  }
+  .btn-primary:hover {
+    background: var(--color-accent-700);
+    color: var(--color-bg);
+  }
+  .btn-primary:active {
+    background: var(--color-accent-800);
+    color: var(--color-bg);
+  }
+
+  .btn-secondary { border-color: var(--color-divider); }
+  .btn-secondary:hover { background: color-mix(in srgb, var(--color-ink) 7%, transparent); }
+  .btn-secondary:active { background: color-mix(in srgb, var(--color-ink) 14%, transparent); }
+
+  .btn-ghost { color: var(--color-accent-700); padding-inline: var(--spacing); }
+  .btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
+  .btn-ghost:active { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
+
+  .btn-icon { width: 36px; height: 36px; padding: 0; }
+  .btn-block { width: 100%; margin-top: var(--spacing); }
+
+  /* — forms — */
+  .field > label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 5px;
+    color: var(--color-muted);
+  }
+  .input {
+    width: 100%;
+    min-height: 36px;
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--color-ink);
+    caret-color: var(--color-accent);
+    background: var(--color-surface);
+    border: 1px solid var(--color-divider);
+    border-radius: 999px;
+  }
+  .input:hover { border-color: color-mix(in srgb, var(--color-ink) 45%, transparent); }
+  .input:focus-visible { border-color: var(--color-accent); outline-offset: 0; }
+  textarea.input { min-height: 90px; border-radius: var(--radius-md); resize: vertical; }
+
+  .radio { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+  .radio input,
+  .seg-opt input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  .radio .dot {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    border-radius: 999px;
+    border: 1.5px solid var(--color-divider);
+  }
+  .radio:hover .dot { border-color: var(--color-accent); }
+  .radio input:checked + .dot {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    box-shadow: inset 0 0 0 4px var(--color-bg);
+  }
+  .radio input:focus-visible + .dot { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+  .seg {
+    display: inline-flex;
+    overflow: hidden;
+    border: 1px solid var(--color-divider);
+    border-radius: 999px;
+  }
+  .seg-opt {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
+  .seg-opt:has(input:checked) { background: var(--color-accent); color: var(--color-ink); }
+  .seg-opt:not(:has(input:checked)):hover { background: color-mix(in srgb, var(--color-ink) 7%, transparent); }
+  .seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+
+  /* — cards — */
+  .card {
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 2);
+    padding: calc(var(--spacing) * 3);
+    border-radius: calc(var(--radius-lg) * 1.15);
+    background: var(--color-surface);
+  }
+  .card-kicker {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-accent-700);
+  }
+  .card-title {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-heading);
+    font-size: 17px;
+    line-height: 1.2;
+  }
+  .card-body { margin: 0; font-size: 13px; opacity: 0.8; flex: 1; }
+  .card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--color-muted);
+  }
+  .elev-sm { box-shadow: var(--shadow-sm); }
+  .elev-md { box-shadow: var(--shadow-md); }
+  .elev-lg { box-shadow: var(--shadow-lg); }
+
+  /* — tags — */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    padding: 3px 12px;
+    border-radius: 999px;
+  }
+  .tag-accent { background: var(--color-accent-100); color: var(--color-accent-800); }
+  .tag-accent-2 { background: var(--color-accent-2-100); color: var(--color-accent-2-800); }
+  .tag-neutral { background: var(--color-neutral-100); color: var(--color-neutral-800); }
+  .tag-outline { border: 1px solid var(--color-accent); color: var(--color-accent-700); }
+
+  /* — meal-type tags: domain layer, not part of Organic proper — */
+  .tag-breakfast { background: var(--color-breakfast-100); color: var(--color-breakfast-800); }
+  .tag-lunch { background: var(--color-lunch-100); color: var(--color-lunch-800); }
+  .tag-dinner { background: var(--color-dinner-100); color: var(--color-dinner-800); }
+  .tag-snack { background: var(--color-snack-100); color: var(--color-snack-800); }
+  .tag-dessert { background: var(--color-dessert-100); color: var(--color-dessert-800); }
+
+  /* — navigation — */
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 4);
+    padding: calc(var(--spacing) * 3) calc(var(--spacing) * 4);
+  }
+  .nav-brand {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-heading);
+    font-size: 18px;
+    margin-right: auto;
+  }
+  .nav a { color: inherit; text-decoration: none; font-size: 14px; }
+  .nav a:hover,
+  .nav a[aria-current="page"] { color: var(--color-accent-700); }
+
+  /* — tables — */
+  .table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  .table th {
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    padding: calc(var(--spacing) * 2);
+    border-bottom: 1px solid var(--color-divider);
+  }
+  .table td {
+    padding: calc(var(--spacing) * 2);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-ink) 8%, transparent);
+  }
+  .table tbody tr:hover { background: color-mix(in srgb, var(--color-ink) 4%, transparent); }
+
+  /* — dialog — */
+  .dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    padding: calc(var(--spacing) * 4);
+    background: color-mix(in srgb, var(--color-neutral-900) 50%, transparent);
+  }
+  .dialog {
+    width: min(440px, 100%);
+    display: flex;
+    flex-direction: column;
+    gap: calc(var(--spacing) * 3);
+    padding: calc(var(--spacing) * 4);
+    border-radius: calc(var(--radius-lg) * 1.15);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lg);
+  }
+  .dialog-title {
+    font-family: var(--font-heading);
+    font-weight: var(--font-weight-heading);
+    font-size: 20px;
+  }
+  .dialog-body { font-size: 14px; opacity: 0.85; }
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: calc(var(--spacing) * 2);
+    margin-top: calc(var(--spacing) * 2);
+  }
+
+  /* — imagery — */
+  .washed { filter: saturate(0.6) contrast(0.85) brightness(1.1) opacity(0.94); }
 }
