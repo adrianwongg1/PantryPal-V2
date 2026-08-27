@@ -15,13 +15,10 @@ const initialMagicState: MagicLinkActionState = { status: "idle" };
 // Desktop: 3a's warm-left-panel split. Mobile: 3c's single column (the
 // panel is simply hidden, not re-laid-out, below lg). No "Keep me signed
 // in" (no clean expression through @supabase/ssr's cookie-based session —
-// it would be decorative) and no "Forgot password?" link: the canvas draws
-// one, but no reset-password flow exists to send it to, and building one
-// is real, unplanned scope beyond this phase — magic link already covers
-// "I can't get in another way" for now.
+// it would be decorative).
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [magicLinkOpen, setMagicLinkOpen] = useState(false);
   const [loginState, loginAction, loginPending] = useActionState(login, initialLoginState);
   const [magicState, magicAction, magicPending] = useActionState(
     sendMagicLink,
@@ -63,17 +60,19 @@ export default function LoginPage() {
 
         <form action={loginAction} className="flex flex-col gap-4">
           <Field label="Email" htmlFor="email">
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+            <Input id="email" name="email" type="email" required autoComplete="email" />
           </Field>
-          <Field label="Password" htmlFor="password">
+          <Field
+            label={
+              <span className="flex items-center justify-between">
+                <span>Password</span>
+                <Link href="/forgot-password" className="font-normal text-accent-700 underline">
+                  Forgot password?
+                </Link>
+              </span>
+            }
+            htmlFor="password"
+          >
             <div className="relative">
               <Input
                 id="password"
@@ -110,22 +109,37 @@ export default function LoginPage() {
           <span className="h-px flex-1 bg-[color:var(--color-divider)]" />
         </div>
 
-        <form action={magicAction} className="flex flex-col gap-2">
-          <input type="hidden" name="email" value={email} />
-          <Button type="submit" variant="secondary" block disabled={magicPending || !email}>
-            {magicPending ? "Sending…" : "Email me a magic link instead"}
+        {magicState.status === "sent" ? (
+          <p role="status" className="text-center text-sm text-lunch-800">
+            If there&rsquo;s an account for that email, you&rsquo;ll receive an email with a
+            link to sign in.
+          </p>
+        ) : magicLinkOpen ? (
+          <form action={magicAction} className="flex flex-col gap-3">
+            <Field label="Email" htmlFor="magic-email">
+              <Input
+                id="magic-email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="you@kitchen.com"
+              />
+            </Field>
+            <Button type="submit" variant="secondary" block disabled={magicPending}>
+              {magicPending ? "Sending…" : "Send magic link"}
+            </Button>
+            {magicState.status === "error" ? (
+              <p role="alert" className="text-center text-xs text-accent-700">
+                {magicState.error}
+              </p>
+            ) : null}
+          </form>
+        ) : (
+          <Button type="button" variant="secondary" block onClick={() => setMagicLinkOpen(true)}>
+            Email me a magic link instead
           </Button>
-          {magicState.status === "sent" ? (
-            <p role="status" className="text-center text-xs text-lunch-800">
-              If there&rsquo;s an account for that email, a sign-in link is on its way.
-            </p>
-          ) : null}
-          {magicState.status === "error" ? (
-            <p role="alert" className="text-center text-xs text-accent-700">
-              {magicState.error}
-            </p>
-          ) : null}
-        </form>
+        )}
 
         <p className="text-center text-sm text-[color:var(--color-muted)]">
           New here?{" "}

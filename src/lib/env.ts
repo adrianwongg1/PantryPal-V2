@@ -7,7 +7,8 @@ import { z } from "zod";
 const publicSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.url(),
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().min(1),
-  NEXT_PUBLIC_SITE_URL: z.url().default("http://localhost:3000"),
+  // 3200, not Next's default 3000 — see package.json's dev/start scripts.
+  NEXT_PUBLIC_SITE_URL: z.url().default("http://localhost:3200"),
 });
 
 const parsed = publicSchema.safeParse({

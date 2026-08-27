@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
 // specs, run against a real browser and a real (locally built) Next.js
 // server, never through jsdom.
 //
-// Deliberately on port 3101, not 3000/.claude/launch.json's dev port: this
+// Deliberately on port 3101, not 3200/.claude/launch.json's dev port: this
 // repo isn't the only Next.js project a developer may have running locally,
 // and reuseExistingServer will happily attach to *any* server already
 // listening on the configured port — including someone else's app — and

@@ -29,7 +29,7 @@ describe("publicEnv", () => {
     expect(publicEnv.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY).toBe(
       "sb_publishable_test",
     );
-    expect(publicEnv.NEXT_PUBLIC_SITE_URL).toBe("http://localhost:3000");
+    expect(publicEnv.NEXT_PUBLIC_SITE_URL).toBe("http://localhost:3200");
   });
 
   it("respects an explicit NEXT_PUBLIC_SITE_URL instead of the default", async () => {
