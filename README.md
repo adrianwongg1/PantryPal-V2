@@ -2,7 +2,7 @@
 
 A full rebuild of [PantryPal](https://github.com/adrianwongg1/Pantry_Pal) (a JavaFX desktop app) as a hosted, AI-powered web app: tell it what's in your kitchen and it turns that into a cookable recipe — with dietary preferences, a saved pantry, and public share pages that actually work for anyone with the link.
 
-**Status: early build-out (Phase 6 of 7).** The JavaFX version isn't touched by this — it stays where it is as the behavioral reference.
+**Status: early build-out (Phase 7 of 7).** The JavaFX version isn't touched by this — it stays where it is as the behavioral reference.
 
 ## Stack
 

@@ -4,7 +4,7 @@ import { createGroq } from "@ai-sdk/groq";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { serverEnv } from "@/lib/env.server";
 import { recipeContentSchema, type RecipeContent } from "./schema";
-import { buildRecipePrompt, type GenerateRecipeInput } from "./prompt";
+import { buildRecipePrompt, buildRewritePrompt, type GenerateRecipeInput } from "./prompt";
 
 export type ModelProvider = "groq" | "anthropic";
 
@@ -67,20 +67,18 @@ function buildMockRecipe(input: GenerateRecipeInput): RecipeContent {
   };
 }
 
-async function callModel(
+// Shared by callModel and callModelForRewrite below — both just differ in
+// how the {system, prompt} pair gets built, not in how it's sent to the
+// model or how the result gets validated/sanitized.
+async function runModel(
   provider: ModelProvider,
-  input: GenerateRecipeInput,
+  system: string,
+  prompt: string,
 ): Promise<RecipeContent> {
-  if (MOCK_AI_RESPONSES) {
-    return sanitizeRecipe(buildMockRecipe(input));
-  }
-
   const model =
     provider === "groq"
       ? groqProvider(serverEnv.GROQ_TEXT_MODEL)
       : anthropicProvider!(serverEnv.ANTHROPIC_TEXT_MODEL);
-
-  const { system, prompt } = buildRecipePrompt(input);
 
   const result = await generateText({
     model,
@@ -105,6 +103,37 @@ async function callModel(
   });
 
   return sanitizeRecipe(result.output);
+}
+
+async function callModel(
+  provider: ModelProvider,
+  input: GenerateRecipeInput,
+): Promise<RecipeContent> {
+  if (MOCK_AI_RESPONSES) {
+    return sanitizeRecipe(buildMockRecipe(input));
+  }
+  const { system, prompt } = buildRecipePrompt(input);
+  return runModel(provider, system, prompt);
+}
+
+// Deterministic stand-in for rewriteRecipe's e2e/test runs — same reasoning
+// as buildMockRecipe, just returning a visibly-modified copy of the input
+// recipe rather than a canned one, so a test can confirm the pipeline
+// actually replaced the form's content and didn't just no-op.
+function buildMockRewriteRecipe(current: RecipeContent, instruction: string): RecipeContent {
+  return { ...current, title: `${current.title} (rewritten: ${instruction})` };
+}
+
+async function callModelForRewrite(
+  provider: ModelProvider,
+  current: RecipeContent,
+  instruction: string,
+): Promise<RecipeContent> {
+  if (MOCK_AI_RESPONSES) {
+    return sanitizeRecipe(buildMockRewriteRecipe(current, instruction));
+  }
+  const { system, prompt } = buildRewritePrompt(current, instruction);
+  return runModel(provider, system, prompt);
 }
 
 // Models reliably follow the prompt's instruction to set `optional: true`
@@ -133,22 +162,22 @@ export function sanitizeRecipe(recipe: RecipeContent): RecipeContent {
 // hiccup — retrying the same call again can help; retrying an auth/network
 // failure the same way can't, so that skips straight to the fallback) ->
 // Anthropic, if configured, as the true fallback for the whole chain
-// regardless of *why* Groq ultimately failed. This is the *default*
-// ("Make me something") path — see generateWithProvider below for "Try a
-// different model", the canvas's own distinct, single-attempt control.
-export async function generateRecipe(
-  input: GenerateRecipeInput,
+// regardless of *why* Groq ultimately failed. Shared by generateRecipe and
+// rewriteRecipe below — both want exactly this chain, differing only in
+// which model-calling function `attempt` wraps.
+async function withFallback(
+  attempt: (provider: ModelProvider) => Promise<RecipeContent>,
 ): Promise<GenerateRecipeResult> {
   let lastError: unknown;
 
   try {
-    const recipe = await callModel("groq", input);
+    const recipe = await attempt("groq");
     return { ok: true, recipe, provider: "groq" };
   } catch (error) {
     lastError = error;
     if (isRetryableGenerationError(error)) {
       try {
-        const recipe = await callModel("groq", input);
+        const recipe = await attempt("groq");
         return { ok: true, recipe, provider: "groq" };
       } catch (retryError) {
         lastError = retryError;
@@ -158,7 +187,7 @@ export async function generateRecipe(
 
   if (anthropicProvider) {
     try {
-      const recipe = await callModel("anthropic", input);
+      const recipe = await attempt("anthropic");
       return { ok: true, recipe, provider: "anthropic" };
     } catch (error) {
       lastError = error;
@@ -166,6 +195,26 @@ export async function generateRecipe(
   }
 
   return { ok: false, error: describeError(lastError) };
+}
+
+// This is the *default* ("Make me something") path — see
+// generateWithProvider below for "Try a different model", the canvas's own
+// distinct, single-attempt control.
+export async function generateRecipe(
+  input: GenerateRecipeInput,
+): Promise<GenerateRecipeResult> {
+  return withFallback((provider) => callModel(provider, input));
+}
+
+// Backs the edit form's "Ask for a rewrite" chips (Phase 6) — same
+// Groq-then-Anthropic fallback chain as generateRecipe, just calling the
+// model with the current recipe + a change instruction instead of a fresh
+// pantry description.
+export async function rewriteRecipe(
+  current: RecipeContent,
+  instruction: string,
+): Promise<GenerateRecipeResult> {
+  return withFallback((provider) => callModelForRewrite(provider, current, instruction));
 }
 
 // The canvas's "Try a different model" button (2a) — an explicit,

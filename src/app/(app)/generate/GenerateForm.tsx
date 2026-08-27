@@ -9,23 +9,10 @@ import { Card } from "@/components/ui/Card";
 import { PhotoPlaceholder } from "@/components/ui/PhotoPlaceholder";
 import { DIFFICULTIES, MEAL_TYPES, type Difficulty, type MealType } from "@/lib/ai/schema";
 import { DIET_TAG_LABELS } from "@/lib/ai/diet-labels";
+import { MEAL_LABELS, DIFFICULTY_LABELS } from "@/lib/ai/recipe-labels";
 import { generateRecipeAction, saveRecipeAction, type GenerateActionState } from "./actions";
 
 const initialState: GenerateActionState = { status: "idle" };
-
-const MEAL_LABELS: Record<MealType, string> = {
-  breakfast: "Breakfast",
-  lunch: "Lunch",
-  dinner: "Dinner",
-  snack: "Snack",
-  dessert: "Dessert",
-};
-
-const DIFFICULTY_LABELS: Record<Difficulty, string> = {
-  easy: "Easy",
-  medium: "Medium",
-  hard: "Hard",
-};
 
 function reassuranceCopy(diets: string[], allergies: string[]): string | null {
   const dietPart = diets.map((d) => DIET_TAG_LABELS[d as keyof typeof DIET_TAG_LABELS]).join(", ");
@@ -289,8 +276,12 @@ function ResultCard({
         <div className="min-w-[230px] flex-1">
           <h6 className="mb-3 text-[color:var(--color-muted)]">Ingredients</h6>
           <div className="flex flex-col gap-2 text-sm">
-            {recipe.ingredients.map((ingredient) => (
-              <span key={ingredient.pantry_key}>
+            {recipe.ingredients.map((ingredient, i) => (
+              // pantry_key is a matching key, not a unique id -- two
+              // ingredients can legitimately share one (found live in
+              // Phase 6 on the same-shaped list on the recipe detail
+              // page), so it can't double as a React list key here either.
+              <span key={i}>
                 {ingredient.quantity ? `${ingredient.quantity} ` : ""}
                 {ingredient.unit ? `${ingredient.unit} ` : ""}
                 {ingredient.name}

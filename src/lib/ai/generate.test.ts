@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { GenerateRecipeInput } from "./prompt";
+import type { RecipeContent } from "./schema";
 
 vi.mock("server-only", () => ({}));
 
@@ -48,7 +49,7 @@ const VALID_INPUT: GenerateRecipeInput = {
   pantryItems: [],
 };
 
-const FAKE_RECIPE = {
+const FAKE_RECIPE: RecipeContent = {
   title: "Charred Lime Chicken Rice",
   meal_type: "dinner",
   difficulty: "easy",
@@ -85,6 +86,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.doUnmock("@/lib/env.server");
+  vi.unstubAllEnvs();
 });
 
 describe("generateRecipe — Anthropic configured", () => {
@@ -268,5 +270,64 @@ describe("sanitizeRecipe", () => {
       ingredients: [{ name: "Optional Foods brand stock cube", pantry_key: "stock cube", optional: false }],
     } as never);
     expect(result.ingredients[0].name).toBe("Optional Foods brand stock cube");
+  });
+});
+
+describe("rewriteRecipe — the edit form's 'Ask for a rewrite' path", () => {
+  it("shares the exact same Groq -> retry -> Anthropic fallback chain as generateRecipe", async () => {
+    generateTextMock
+      .mockRejectedValueOnce(new FakeNoOutputGeneratedError("bad json"))
+      .mockRejectedValueOnce(new FakeNoOutputGeneratedError("bad json again"))
+      .mockResolvedValueOnce({ output: FAKE_RECIPE });
+    const { rewriteRecipe } = await importGenerateWithEnv({
+      GROQ_API_KEY: "gsk_test",
+      ANTHROPIC_API_KEY: "sk-ant-test",
+    });
+
+    const result = await rewriteRecipe(FAKE_RECIPE, "make it vegetarian");
+
+    expect(result).toEqual({ ok: true, recipe: FAKE_RECIPE, provider: "anthropic" });
+    expect(generateTextMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("passes the current recipe and instruction into the prompt sent to the model", async () => {
+    generateTextMock.mockResolvedValueOnce({ output: FAKE_RECIPE });
+    const { rewriteRecipe } = await importGenerateWithEnv({ GROQ_API_KEY: "gsk_test" });
+
+    await rewriteRecipe(FAKE_RECIPE, "double the servings");
+
+    const call = generateTextMock.mock.calls[0][0];
+    expect(call.prompt).toContain(JSON.stringify(FAKE_RECIPE));
+    expect(call.prompt).toContain("double the servings");
+  });
+
+  it("sanitizes the rewritten result the same as a fresh generation", async () => {
+    generateTextMock.mockResolvedValueOnce({
+      output: {
+        ...FAKE_RECIPE,
+        ingredients: [{ name: "Soy sauce (optional)", pantry_key: "soy sauce", optional: true }],
+      },
+    });
+    const { rewriteRecipe } = await importGenerateWithEnv({ GROQ_API_KEY: "gsk_test" });
+
+    const result = await rewriteRecipe(FAKE_RECIPE, "make it soy-free optional garnish");
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.recipe.ingredients[0].name).toBe("Soy sauce");
+    }
+  });
+
+  it("in mock mode, returns a visibly-modified copy of the input recipe rather than a no-op", async () => {
+    vi.stubEnv("MOCK_AI_RESPONSES", "1");
+    const { rewriteRecipe } = await importGenerateWithEnv({ GROQ_API_KEY: "gsk_test" });
+
+    const result = await rewriteRecipe(FAKE_RECIPE, "make it spicier");
+
+    expect(generateTextMock).not.toHaveBeenCalled();
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.recipe.title).toBe(`${FAKE_RECIPE.title} (rewritten: make it spicier)`);
+    }
   });
 });

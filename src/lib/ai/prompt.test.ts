@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildRecipePrompt, type GenerateRecipeInput } from "./prompt";
+import { buildRecipePrompt, buildRewritePrompt, type GenerateRecipeInput } from "./prompt";
+import type { RecipeContent } from "./schema";
 
 function baseInput(overrides: Partial<GenerateRecipeInput> = {}): GenerateRecipeInput {
   return {
@@ -91,5 +92,43 @@ describe("buildRecipePrompt", () => {
   it("asks for a pantry_key distinct from the display name, for pantry matching later", () => {
     const { system } = buildRecipePrompt(baseInput());
     expect(system).toMatch(/pantry_key/);
+  });
+});
+
+const BASE_RECIPE: RecipeContent = {
+  title: "Charred Lime Chicken Rice",
+  meal_type: "dinner",
+  difficulty: "easy",
+  prep_minutes: 8,
+  cook_minutes: 14,
+  servings: 2,
+  ingredients: [{ name: "Chicken", pantry_key: "chicken", optional: false }],
+  steps: [{ text: "Cook it." }],
+  tags: [],
+  diet_tags: [],
+};
+
+describe("buildRewritePrompt", () => {
+  it("includes the current recipe as JSON and the requested change", () => {
+    const { prompt } = buildRewritePrompt(BASE_RECIPE, "make it vegetarian");
+    expect(prompt).toContain(JSON.stringify(BASE_RECIPE));
+    expect(prompt).toContain("Requested change: make it vegetarian");
+  });
+
+  it("asks for the full recipe back, not a diff", () => {
+    const { system } = buildRewritePrompt(BASE_RECIPE, "make it spicier");
+    expect(system).toMatch(/complete\s+recipe again/);
+    expect(system).toMatch(/not a diff/);
+  });
+
+  it("asks pantry_key to stay stable for unchanged ingredients", () => {
+    const { system } = buildRewritePrompt(BASE_RECIPE, "double it");
+    expect(system).toMatch(/pantry_key.*identical/);
+  });
+
+  it("still carries the shared pantry_key/optional instructions", () => {
+    const { system } = buildRewritePrompt(BASE_RECIPE, "double it");
+    expect(system).toMatch(/pantry_key/);
+    expect(system).toMatch(/optional: true/);
   });
 });
