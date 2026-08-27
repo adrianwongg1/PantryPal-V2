@@ -34,14 +34,49 @@ export type Database = {
   }
   public: {
     Tables: {
+      generation_events: {
+        Row: {
+          created_at: string
+          id: string
+          provider: string
+          succeeded: boolean
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          provider: string
+          succeeded: boolean
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          provider?: string
+          succeeded?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generation_events_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pantry_items: {
         Row: {
           category: string | null
           created_at: string
           expires_on: string | null
           id: string
+          low_stock: boolean
           name: string
+          needed_for_recipe_id: string | null
           quantity: number | null
+          status: Database["public"]["Enums"]["pantry_status"]
           unit: string | null
           updated_at: string
           user_id: string
@@ -51,8 +86,11 @@ export type Database = {
           created_at?: string
           expires_on?: string | null
           id?: string
+          low_stock?: boolean
           name: string
+          needed_for_recipe_id?: string | null
           quantity?: number | null
+          status?: Database["public"]["Enums"]["pantry_status"]
           unit?: string | null
           updated_at?: string
           user_id: string
@@ -62,13 +100,23 @@ export type Database = {
           created_at?: string
           expires_on?: string | null
           id?: string
+          low_stock?: boolean
           name?: string
+          needed_for_recipe_id?: string | null
           quantity?: number | null
+          status?: Database["public"]["Enums"]["pantry_status"]
           unit?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "pantry_items_needed_for_recipe_id_fkey"
+            columns: ["needed_for_recipe_id"]
+            isOneToOne: false
+            referencedRelation: "recipes"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "pantry_items_user_id_fkey"
             columns: ["user_id"]
@@ -108,15 +156,19 @@ export type Database = {
       recipes: {
         Row: {
           cook_minutes: number
+          cooked_count: number
           created_at: string
           cuisine: string | null
+          diet_tags: Database["public"]["Enums"]["diet_tag"][]
           difficulty: Database["public"]["Enums"]["difficulty"]
           id: string
           image_path: string | null
           ingredients: Json
+          last_cooked_at: string | null
           legacy_id: string | null
           meal_type: Database["public"]["Enums"]["meal_type"]
           model: string | null
+          notes: string | null
           prep_minutes: number
           servings: number
           share_slug: string | null
@@ -132,15 +184,19 @@ export type Database = {
         }
         Insert: {
           cook_minutes?: number
+          cooked_count?: number
           created_at?: string
           cuisine?: string | null
+          diet_tags?: Database["public"]["Enums"]["diet_tag"][]
           difficulty?: Database["public"]["Enums"]["difficulty"]
           id?: string
           image_path?: string | null
           ingredients?: Json
+          last_cooked_at?: string | null
           legacy_id?: string | null
           meal_type: Database["public"]["Enums"]["meal_type"]
           model?: string | null
+          notes?: string | null
           prep_minutes?: number
           servings?: number
           share_slug?: string | null
@@ -156,15 +212,19 @@ export type Database = {
         }
         Update: {
           cook_minutes?: number
+          cooked_count?: number
           created_at?: string
           cuisine?: string | null
+          diet_tags?: Database["public"]["Enums"]["diet_tag"][]
           difficulty?: Database["public"]["Enums"]["difficulty"]
           id?: string
           image_path?: string | null
           ingredients?: Json
+          last_cooked_at?: string | null
           legacy_id?: string | null
           meal_type?: Database["public"]["Enums"]["meal_type"]
           model?: string | null
+          notes?: string | null
           prep_minutes?: number
           servings?: number
           share_slug?: string | null
@@ -192,36 +252,51 @@ export type Database = {
         Row: {
           allergies: string[]
           default_servings: number
+          default_visibility: Database["public"]["Enums"]["visibility"]
           diets: Database["public"]["Enums"]["diet_tag"][]
           disliked_ingredients: string[]
           extra_notes: string | null
           max_total_minutes: number | null
+          notify_expiring: boolean
+          notify_weekly_plan: boolean
           preferred_cuisines: string[]
           spice_level: number
+          theme: Database["public"]["Enums"]["theme_preference"]
+          units: Database["public"]["Enums"]["units_system"]
           updated_at: string
           user_id: string
         }
         Insert: {
           allergies?: string[]
           default_servings?: number
+          default_visibility?: Database["public"]["Enums"]["visibility"]
           diets?: Database["public"]["Enums"]["diet_tag"][]
           disliked_ingredients?: string[]
           extra_notes?: string | null
           max_total_minutes?: number | null
+          notify_expiring?: boolean
+          notify_weekly_plan?: boolean
           preferred_cuisines?: string[]
           spice_level?: number
+          theme?: Database["public"]["Enums"]["theme_preference"]
+          units?: Database["public"]["Enums"]["units_system"]
           updated_at?: string
           user_id: string
         }
         Update: {
           allergies?: string[]
           default_servings?: number
+          default_visibility?: Database["public"]["Enums"]["visibility"]
           diets?: Database["public"]["Enums"]["diet_tag"][]
           disliked_ingredients?: string[]
           extra_notes?: string | null
           max_total_minutes?: number | null
+          notify_expiring?: boolean
+          notify_weekly_plan?: boolean
           preferred_cuisines?: string[]
           spice_level?: number
+          theme?: Database["public"]["Enums"]["theme_preference"]
+          units?: Database["public"]["Enums"]["units_system"]
           updated_at?: string
           user_id?: string
         }
@@ -240,6 +315,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      delete_own_account: { Args: never; Returns: undefined }
       get_shared_recipe: {
         Args: { p_slug: string }
         Returns: {
@@ -280,7 +356,10 @@ export type Database = {
         | "low_sodium"
       difficulty: "easy" | "medium" | "hard"
       meal_type: "breakfast" | "lunch" | "dinner" | "snack" | "dessert"
+      pantry_status: "have" | "need"
       recipe_source: "generated" | "manual" | "imported"
+      theme_preference: "system" | "light" | "dark"
+      units_system: "metric" | "imperial"
       visibility: "private" | "unlisted" | "public"
     }
     CompositeTypes: {
@@ -428,7 +507,10 @@ export const Constants = {
       ],
       difficulty: ["easy", "medium", "hard"],
       meal_type: ["breakfast", "lunch", "dinner", "snack", "dessert"],
+      pantry_status: ["have", "need"],
       recipe_source: ["generated", "manual", "imported"],
+      theme_preference: ["system", "light", "dark"],
+      units_system: ["metric", "imperial"],
       visibility: ["private", "unlisted", "public"],
     },
   },

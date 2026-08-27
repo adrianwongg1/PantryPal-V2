@@ -24,7 +24,7 @@ describe("serverEnv", () => {
 
     expect(serverEnv.GROQ_API_KEY).toBe("gsk_test");
     expect(serverEnv.ANTHROPIC_API_KEY).toBe("sk-ant-test");
-    expect(serverEnv.GROQ_TEXT_MODEL).toBe("llama-3.3-70b-versatile");
+    expect(serverEnv.GROQ_TEXT_MODEL).toBe("openai/gpt-oss-120b");
     expect(serverEnv.GROQ_TRANSCRIPTION_MODEL).toBe("whisper-large-v3-turbo");
     expect(serverEnv.ANTHROPIC_TEXT_MODEL).toBe("claude-haiku-4-5");
   });
@@ -46,12 +46,12 @@ describe("serverEnv", () => {
     );
   });
 
-  it("throws at import time when ANTHROPIC_API_KEY is missing", async () => {
+  it("does NOT require ANTHROPIC_API_KEY — it's the Groq-unavailable fallback tier, not a boot requirement", async () => {
     vi.stubEnv("GROQ_API_KEY", "gsk_test");
     vi.stubEnv("ANTHROPIC_API_KEY", undefined);
 
-    await expect(import("./env.server")).rejects.toThrow(
-      /Invalid server environment variables/,
-    );
+    const { serverEnv } = await import("./env.server");
+
+    expect(serverEnv.ANTHROPIC_API_KEY).toBeUndefined();
   });
 });

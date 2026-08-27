@@ -11,10 +11,18 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Fake-but-well-formed values so env.ts/env.server.ts validate during
-  # typecheck/build without touching a real project. Nothing in this
-  # workflow talks to the live database or a real AI provider — that's
-  # what the mocked Vitest suite and the nightly smoke job are for.
+  # Fake-but-well-formed values so env.ts/env.server.ts validate during the
+  # early typecheck/lint/build/unit-test steps without touching a real
+  # project. Overridden with the real local Supabase stack's own URL/key
+  # (see "Export local Supabase connection details" below) once it's up —
+  # everything from the e2e build onward needs a real backend, since it's
+  # signing up real users and reading their data back through RLS. That
+  # split is deliberate, not an oversight: two real bugs in this app
+  # (handle_new_user rejecting hyphenated emails, and Postgres never having
+  # granted table privileges to anon/authenticated at all) were only
+  # catchable by a step that actually talks to a real, freshly-migrated
+  # database — no amount of placeholder-env typecheck/build/unit-test
+  # coverage would have caught either.
   NEXT_PUBLIC_SUPABASE_URL: "https://ci-placeholder.supabase.co"
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_ci_placeholder"
   GROQ_API_KEY: "gsk_ci_placeholder"
@@ -58,29 +66,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Build
+      - name: Build (placeholder env — catches build errors independent of any real backend)
         run: pnpm build
 
       - name: Unit tests
         run: pnpm test --run
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: E2E tests
-        # Reuses the `pnpm build` output above (playwright.config.ts skips a
-        # second build when CI=true) and runs against port 3101, not 3000 —
-        # keeps this independent of whatever else might bind the default
-        # dev port on a shared runner.
-        run: pnpm test:e2e
-
-      - name: Upload Playwright report
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
 
       - uses: supabase/setup-cli@v1
         with:
@@ -106,6 +96,59 @@ jobs:
             echo "::error::src/lib/supabase/database.types.ts is stale — a migration changed the schema without regenerating types. Run: supabase gen types typescript --local > src/lib/supabase/database.types.ts"
             exit 1
           }
+
+      - name: Export local Supabase connection details for the e2e build
+        # Was `STATUS=$(supabase status)` piped through `jq -r .API_URL` —
+        # that assumed `supabase status` prints JSON by default, true for
+        # the CLI version this step was first written against but NOT
+        # guaranteed across versions, and `supabase/setup-cli@v1`'s
+        # `version: latest` pulls whatever's current on every run. Confirmed
+        # directly this actually broke: a real CI run failed with
+        # `jq: parse error: Invalid numeric literal`, because a newer CLI's
+        # default `supabase status` output is plain text, not JSON — and
+        # because that failure happened inside a `$(...)` substitution
+        # feeding `echo`, `set -e` didn't catch it: this step "succeeded"
+        # while silently writing empty URL/key into $GITHUB_ENV, only
+        # surfacing later as an opaque env-validation failure in the next
+        # build step. `-o env --override-name` sidesteps the whole "what's
+        # the default format" question — it's a stable, documented flag
+        # (`supabase status --help` shows this exact use case) that emits
+        # the two variables under the exact names needed, no jq required.
+        # Filtered to just those two lines, not the full output, so this
+        # step never writes SERVICE_ROLE_KEY/SECRET_KEY into $GITHUB_ENV —
+        # every later step in this job would otherwise inherit them for no
+        # reason, a real credential this app's own env.server.ts deliberately
+        # never gives the running app access to (see its own comment).
+        run: |
+          supabase status -o env \
+            --override-name api.url=NEXT_PUBLIC_SUPABASE_URL \
+            --override-name auth.publishable_key=NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY \
+            | grep -E '^NEXT_PUBLIC_SUPABASE_(URL|PUBLISHABLE_KEY)=' \
+            | tr -d '"' >> "$GITHUB_ENV"
+
+      - name: Build against the local Supabase stack (for e2e)
+        # A second build, deliberately: the one above has the placeholder
+        # URL baked into its client bundle (NEXT_PUBLIC_* is inlined at
+        # build time), so e2e needs its own build against the real one just
+        # exported. playwright.config.ts's CI branch does not build itself
+        # for exactly this reason — this step is that build.
+        run: pnpm build
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: E2E tests
+        # Runs against port 3101, not 3000 — keeps this independent of
+        # whatever else might bind the default dev port on a shared runner.
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
 
       - name: Stop local Supabase stack
         if: always()
