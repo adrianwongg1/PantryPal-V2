@@ -31,7 +31,7 @@ supabase gen types typescript --local > src/lib/supabase/database.types.ts   # m
 supabase db lint
 ```
 
-CI (`.github/workflows/ci.yml`) runs, in order: typecheck → lint → build → `vitest --run` → Playwright (`pnpm test:e2e`, reusing the build above, port 3101) → `supabase start` → `supabase db reset` → `supabase db lint` → diff the freshly-generated types against the committed `database.types.ts` (fails the build if a migration wasn't followed by regenerating types). It injects fake-but-well-formed env values so typecheck/build succeed without real secrets; nothing in CI talks to a live Supabase project or a real AI provider.
+CI (`.github/workflows/ci.yml`) runs, in order: typecheck → lint → build (placeholder env) → `vitest --run` → `supabase start` → `supabase db reset` → `supabase db lint` → diff the freshly-generated types against the committed `database.types.ts` (fails the build if a migration wasn't followed by regenerating types) → export the now-running local stack's own URL/key over the placeholder ones → a second build against that real local stack → Playwright (`pnpm test:e2e`, port 3101) → `supabase stop`. Only the AI provider keys stay fake-but-well-formed throughout (nothing in CI calls Groq/Anthropic) — from the second build onward, Supabase is real: e2e signs up real users and reads their data back through RLS, which is deliberate, not a leak. Two real bugs (`handle_new_user` rejecting hyphenated emails; Postgres never having granted table privileges to `anon`/`authenticated` at all) were only catchable by a step that actually talks to a freshly-migrated database — no amount of placeholder-env typecheck/build/unit-test coverage would have caught either.
 
 ## Architecture
 

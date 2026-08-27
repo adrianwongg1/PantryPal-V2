@@ -1,8 +1,9 @@
 import { requireUser } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/Button";
 
-// Full CRUD + filter/sort/search lands in Phase 2 — this page exists in
-// Phase 1 only to prove the auth + RLS path end to end: a signed-in user
-// hits their own (currently always empty) slice of `recipes`.
+// Full CRUD + filter/sort/search lands in Phase 6 — this page exists since
+// Phase 1 to prove the auth + RLS path end to end: a signed-in user hits
+// their own (currently always empty) slice of `recipes`.
 export default async function RecipesPage() {
   const { supabase } = await requireUser();
 
@@ -19,13 +20,7 @@ export default async function RecipesPage() {
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl">Your recipes</h1>
-        <button
-          type="button"
-          disabled
-          className="font-heading text-sm bg-accent text-ink px-4 py-2 disabled:opacity-45"
-        >
-          New recipe (coming soon)
-        </button>
+        <Button disabled>New recipe (coming soon)</Button>
       </div>
 
       {recipes.length === 0 ? (
